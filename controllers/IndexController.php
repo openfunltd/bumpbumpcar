@@ -39,6 +39,7 @@ class IndexController extends MiniEngine_Controller
             JOIN accidents a ON a.rowid = r.id
             WHERE r.min_lon <= :maxLon AND r.max_lon >= :minLon
               AND r.min_lat <= :maxLat AND r.max_lat >= :minLat
+              AND a."發生年度" = :year
             GROUP BY uuid
         ');
         $stmt->execute([
@@ -46,6 +47,7 @@ class IndexController extends MiniEngine_Controller
             'maxLon' => $x + $lonDelta,
             'minLat' => $y - $latDelta,
             'maxLat' => $y + $latDelta,
+            'year' => (int) date('Y'),
         ]);
 
         $results = [];
