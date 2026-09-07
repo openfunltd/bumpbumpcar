@@ -35,17 +35,28 @@ document.getElementById('use-my-location').addEventListener('click', function ()
 <div>
 <?php if (is_array($this->results)): ?>
     <p>方圓 1km 內共找到 <?= count($this->results) ?> 場事故（花了 <?= $this->escape($this->elapsed_seconds) ?> 秒）</p>
-    <ul>
-    <?php foreach ($this->results as $row): ?>
-        <li>
-            <?= $this->escape($row['uuid']) ?>
-            - 經度: <?= $this->escape($row['lon']) ?>
-            緯度: <?= $this->escape($row['lat']) ?>
-            分類: <?= $this->escape($row['category']) ?>
-            (<?= $this->escape($row['distance_km']) ?>km)
-        </li>
-    <?php endforeach ?>
-    </ul>
+    <div id="map" style="height: 500px;"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script>
+    var map = L.map('map').setView([<?= (float) $this->y ?>, <?= (float) $this->x ?>], 15);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    var markers = L.markerClusterGroup();
+    var accidents = <?= json_encode($this->results, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+
+    accidents.forEach(function (row) {
+        var marker = L.marker([row.lat, row.lon]);
+        marker.bindPopup(row.category + ' - ' + row.distance_km + 'km');
+        markers.addLayer(marker);
+    });
+
+    map.addLayer(markers);
+    </script>
 <?php endif ?>
 </div>
 
