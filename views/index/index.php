@@ -34,8 +34,26 @@ document.getElementById('use-my-location').addEventListener('click', function ()
 
 <div>
 <?php if (is_array($this->results)): ?>
-    <p>方圓 1km 內共找到 <?= count($this->results) ?> 場事故（花了 <?= $this->escape($this->elapsed_seconds) ?> 秒）</p>
-    <div id="map" style="height: 500px;"></div>
+    <p>方圓 1km 內共找到 <?= count($this->results) ?> 場事故（A1 <?= $this->escape($this->a1_count) ?> 場、A2 <?= $this->escape($this->a2_count) ?> 場，花了 <?= $this->escape($this->elapsed_seconds) ?> 秒）</p>
+
+    <?php if ($this->a1_list): ?>
+    <h3>A1 事故（死亡）清單</h3>
+    <ul>
+    <?php foreach ($this->a1_list as $row): ?>
+        <li>
+            <?= $this->escape($row['date']) ?> <?= $this->escape($row['time']) ?>
+            - <?= $this->escape($row['location']) ?>
+            - <?= $this->escape($row['casualties']) ?>
+            - <?= $this->escape($row['collision_type']) ?>/<?= $this->escape($row['collision_subtype']) ?>
+            - 肇因: <?= $this->escape($row['cause']) ?>/<?= $this->escape($row['cause_detail']) ?>
+            - 車種: <?= $this->escape($row['vehicle_types']) ?>
+            - 經緯度: <?= $this->escape($row['lon']) ?>, <?= $this->escape($row['lat']) ?>
+        </li>
+    <?php endforeach ?>
+    </ul>
+    <?php endif ?>
+
+    <div id="map" style="height: 80vh;"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
@@ -51,7 +69,7 @@ document.getElementById('use-my-location').addEventListener('click', function ()
 
     accidents.forEach(function (row) {
         var marker = L.marker([row.lat, row.lon]);
-        marker.bindPopup(row.category + ' - ' + row.distance_km + 'km');
+        marker.bindPopup(row.date + ' ' + row.time + '<br>' + row.location + '<br>' + row.casualties);
         markers.addLayer(marker);
     });
 
