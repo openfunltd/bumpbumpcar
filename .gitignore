@@ -2,3 +2,4 @@ config.inc.php
 .*.swp
 .prompt_history
 data/
+dump.log
