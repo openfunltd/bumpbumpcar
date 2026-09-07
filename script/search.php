@@ -38,12 +38,15 @@ $start = microtime(true);
 $latDelta = $z / 111.32;
 $lonDelta = $z / (111.32 * cos(deg2rad($y)));
 
+// id 格式為 {uuid}-{當事者順位}，同一場事故的多位當事者共用同一組 uuid（前 36 碼），
+// 用 GROUP BY 讓每場事故只輸出一列（同一場事故的經緯度、事故分類皆相同，取任一列即可）
 $stmt = $pdo->prepare('
-    SELECT a.id, a."經度", a."緯度", a."發生日期", a."發生地點"
+    SELECT substr(a.id, 1, 36) AS uuid, a."經度" AS lon, a."緯度" AS lat, a."事故類別名稱" AS category
     FROM accidents_rtree r
     JOIN accidents a ON a.rowid = r.id
     WHERE r.min_lon <= :maxLon AND r.max_lon >= :minLon
       AND r.min_lat <= :maxLat AND r.max_lat >= :minLat
+    GROUP BY uuid
 ');
 $stmt->execute([
     'minLon' => $x - $lonDelta,
@@ -54,7 +57,7 @@ $stmt->execute([
 
 $results = [];
 while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-    $distance = haversineKm($y, $x, (float) $row['緯度'], (float) $row['經度']);
+    $distance = haversineKm($y, $x, (float) $row['lat'], (float) $row['lon']);
     if ($distance <= $z) {
         $row['距離_km'] = round($distance, 3);
         $results[] = $row;
@@ -66,7 +69,7 @@ usort($results, fn($a, $b) => $a['距離_km'] <=> $b['距離_km']);
 $elapsed = microtime(true) - $start;
 
 foreach ($results as $row) {
-    echo "[{$row['距離_km']}km] {$row['發生日期']} {$row['發生地點']}\n";
+    echo "{$row['uuid']}\t{$row['lon']}\t{$row['lat']}\t{$row['category']}\n";
 }
 
 echo "\n共找到 " . count($results) . " 筆事故（座標 $x, $y 方圓 {$z}km 內）\n";
