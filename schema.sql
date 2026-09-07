@@ -2,8 +2,7 @@
 -- 資料來源: 政府資料開放平臺「交通事故資料」CSV，每列為一起事故的一位當事者
 
 CREATE TABLE accidents (
-    id INTEGER PRIMARY KEY,
-    source_id TEXT,
+    id TEXT PRIMARY KEY,
     "發生年度" INTEGER,
     "發生月份" INTEGER,
     "發生日期" TEXT,
@@ -59,6 +58,7 @@ CREATE TABLE accidents (
 );
 
 -- R-Tree 索引：用來快速查詢「經緯度附近範圍內」的事故（點資料 min=max）
+-- rtree 的 id 欄位限定為整數，因此用 accidents 內建的隱藏 rowid（非 accidents.id 這個 TEXT 欄位）來對應
 CREATE VIRTUAL TABLE accidents_rtree USING rtree(
     id,
     min_lon, max_lon,
@@ -69,18 +69,18 @@ CREATE TRIGGER trg_accidents_ai AFTER INSERT ON accidents
 WHEN NEW."經度" IS NOT NULL AND NEW."緯度" IS NOT NULL
 BEGIN
     INSERT INTO accidents_rtree (id, min_lon, max_lon, min_lat, max_lat)
-    VALUES (NEW.id, NEW."經度", NEW."經度", NEW."緯度", NEW."緯度");
+    VALUES (NEW.rowid, NEW."經度", NEW."經度", NEW."緯度", NEW."緯度");
 END;
 
 CREATE TRIGGER trg_accidents_au AFTER UPDATE OF "經度", "緯度" ON accidents
 BEGIN
-    DELETE FROM accidents_rtree WHERE id = OLD.id;
+    DELETE FROM accidents_rtree WHERE id = OLD.rowid;
     INSERT INTO accidents_rtree (id, min_lon, max_lon, min_lat, max_lat)
-    SELECT NEW.id, NEW."經度", NEW."經度", NEW."緯度", NEW."緯度"
+    SELECT NEW.rowid, NEW."經度", NEW."經度", NEW."緯度", NEW."緯度"
     WHERE NEW."經度" IS NOT NULL AND NEW."緯度" IS NOT NULL;
 END;
 
 CREATE TRIGGER trg_accidents_ad AFTER DELETE ON accidents
 BEGIN
-    DELETE FROM accidents_rtree WHERE id = OLD.id;
+    DELETE FROM accidents_rtree WHERE id = OLD.rowid;
 END;

@@ -41,7 +41,7 @@ $lonDelta = $z / (111.32 * cos(deg2rad($y)));
 $stmt = $pdo->prepare('
     SELECT a.id, a."經度", a."緯度", a."發生日期", a."發生地點"
     FROM accidents_rtree r
-    JOIN accidents a ON a.id = r.id
+    JOIN accidents a ON a.rowid = r.id
     WHERE r.min_lon <= :maxLon AND r.max_lon >= :minLon
       AND r.min_lat <= :maxLat AND r.max_lat >= :minLat
 ');
