@@ -18,7 +18,9 @@ class IndexController extends MiniEngine_Controller
             return;
         }
 
+        $start = microtime(true);
         $this->view->results = $this->searchAccidents((float) $x, (float) $y, self::SEARCH_RADIUS_KM);
+        $this->view->elapsed_seconds = round(microtime(true) - $start, 3);
     }
 
     protected function searchAccidents($x, $y, $z)

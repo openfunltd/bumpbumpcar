@@ -34,7 +34,7 @@ document.getElementById('use-my-location').addEventListener('click', function ()
 
 <div>
 <?php if (is_array($this->results)): ?>
-    <p>方圓 1km 內共找到 <?= count($this->results) ?> 場事故</p>
+    <p>方圓 1km 內共找到 <?= count($this->results) ?> 場事故（花了 <?= $this->escape($this->elapsed_seconds) ?> 秒）</p>
     <ul>
     <?php foreach ($this->results as $row): ?>
         <li>
